@@ -278,6 +278,16 @@ window.FOOD_TRUCKS_DATA = {
         "004.jpg",
         "005.jpg"
       ]
+    },
+    {
+      "slug": "zz-test-cliente",
+      "name": "ZZ Test Cliente",
+      "count": 2,
+      "cover": "001.jpg",
+      "images": [
+        "001.jpg",
+        "002.jpg"
+      ]
     }
   ]
 };
