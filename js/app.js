@@ -67,11 +67,12 @@
     var app = document.getElementById("app");
     var topnav = document.getElementById("topnav");
     destroyActiveCarousel();
+    destroyHeroMesh();
 
     if(parts.length === 0){
       topnav.innerHTML = "";
       app.innerHTML = renderHome();
-      initHeroSlideshow();
+      initHeroMesh();
       bindHomeEvents();
     } else if(parts[0] === "food-trucks" && !parts[1]){
       topnav.innerHTML = '<a href="#/">Inicio</a><span class="crumb-sep">/</span><span>Food Trucks</span>';
@@ -93,15 +94,6 @@
 
   // ---------------- Views ----------------
   function renderHome(){
-    var bgPool = [];
-    CLIENTS.forEach(function(c){ bgPool.push(imgFull(c.slug, c.cover)); });
-    // shuffle-ish sample
-    var picks = bgPool.filter(function(_, i){ return i % Math.max(1, Math.floor(bgPool.length/8)) === 0; }).slice(0,8);
-
-    var bgImgs = picks.map(function(src,i){
-      return '<img src="'+src+'" alt="" class="'+(i===0?'active':'')+'">';
-    }).join("");
-
     var cards = SERVICES.map(function(s){
       var cls = "service-card" + (s.active ? " active" : " soon");
       var attr = s.active ? ' data-goto="#/'+s.id+'"' : "";
@@ -115,7 +107,7 @@
 
     return '' +
     '<section class="hero view">' +
-      '<div class="hero-bg" id="heroBg">'+bgImgs+'</div>' +
+      '<canvas class="hero-mesh" id="heroMesh"></canvas>' +
       '<div class="hero-overlay"></div>' +
       '<div class="hero-content">' +
         '<img src="img/logo.png" class="hero-logo" alt="F3DE DESIGN">' +
@@ -170,18 +162,166 @@
   }
 
   // ---------------- Home behaviors ----------------
-  var heroTimer = null;
-  function initHeroSlideshow(){
-    var wrap = document.getElementById("heroBg");
-    if(!wrap) return;
-    var imgs = wrap.querySelectorAll("img");
-    if(imgs.length < 2) return;
-    var idx = 0;
-    heroTimer = setInterval(function(){
-      imgs[idx].classList.remove("active");
-      idx = (idx + 1) % imgs.length;
-      imgs[idx].classList.add("active");
-    }, 4000);
+  var meshState = null;
+
+  function destroyHeroMesh(){
+    if(!meshState) return;
+    if(meshState.rafId) cancelAnimationFrame(meshState.rafId);
+    window.removeEventListener("resize", meshState.onResize);
+    meshState.hero.removeEventListener("mousemove", meshState.onMouseMove);
+    meshState.hero.removeEventListener("mouseleave", meshState.onMouseLeave);
+    meshState.hero.removeEventListener("touchmove", meshState.onTouchMove);
+    meshState.hero.removeEventListener("touchend", meshState.onMouseLeave);
+    meshState = null;
+  }
+
+  function initHeroMesh(){
+    var canvas = document.getElementById("heroMesh");
+    var hero = document.querySelector(".hero");
+    if(!canvas || !hero) return;
+
+    var ctx = canvas.getContext("2d");
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+    var mouse = { x: 0, y: 0, active: false };
+    var grid = { cols: 0, rows: 0, pointsPerRow: 0, points: [] };
+    var w = 0, h = 0;
+    var influenceR = 170;
+    var pushStrength = 22;
+
+    function buildGrid(){
+      var targetCount = w < 640 ? 46 : 96;
+      var spacing = Math.max(50, Math.sqrt((w * h) / targetCount));
+      var cols = Math.max(3, Math.ceil(w / spacing));
+      var rows = Math.max(3, Math.ceil(h / spacing));
+      var stepX = w / cols, stepY = h / rows;
+      var points = [];
+      for(var j = 0; j <= rows; j++){
+        for(var i = 0; i <= cols; i++){
+          points.push({
+            baseX: i * stepX, baseY: j * stepY,
+            ampX: stepX * 0.16, ampY: stepY * 0.16,
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.25 + Math.random() * 0.25,
+            x: i * stepX, y: j * stepY
+          });
+        }
+      }
+      grid = { cols: cols, rows: rows, pointsPerRow: cols + 1, points: points };
+    }
+
+    function resize(){
+      var rect = hero.getBoundingClientRect();
+      w = rect.width; h = rect.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildGrid();
+    }
+
+    function strokeEdge(p1, p2){
+      var f = Math.max(p1.f, p2.f);
+      ctx.strokeStyle = "rgba(232," + Math.round(57 + f*90) + "," + Math.round(27 + f*80) + "," + (0.08 + f*0.55).toFixed(3) + ")";
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    function fillTri(p1, p2, p3, f){
+      ctx.fillStyle = "rgba(232,90,60," + (f*0.14).toFixed(3) + ")";
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.lineTo(p3.x, p3.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function draw(t){
+      ctx.clearRect(0, 0, w, h);
+      var pts = grid.points;
+      var n = pts.length;
+      var disp = new Array(n);
+
+      for(var k = 0; k < n; k++){
+        var p = pts[k];
+        if(!reduceMotion){
+          p.x = p.baseX + Math.sin(t * 0.001 * p.speed + p.phase) * p.ampX;
+          p.y = p.baseY + Math.cos(t * 0.0011 * p.speed + p.phase) * p.ampY;
+        }
+        var dx = p.x - mouse.x, dy = p.y - mouse.y;
+        var dist = mouse.active ? Math.sqrt(dx*dx + dy*dy) : Infinity;
+        if(dist < influenceR){
+          var f = 1 - dist / influenceR;
+          var push = f * f * pushStrength;
+          var safeDist = dist || 0.001;
+          disp[k] = { x: p.x + (dx/safeDist)*push, y: p.y + (dy/safeDist)*push, f: f };
+        } else {
+          disp[k] = { x: p.x, y: p.y, f: 0 };
+        }
+      }
+
+      ctx.lineWidth = 1;
+      var cols = grid.cols, rows = grid.rows, ppr = grid.pointsPerRow;
+      for(var j = 0; j <= rows; j++){
+        for(var i = 0; i <= cols; i++){
+          var a = disp[j*ppr + i];
+          if(i < cols) strokeEdge(a, disp[j*ppr + i + 1]);
+          if(j < rows) strokeEdge(a, disp[(j+1)*ppr + i]);
+          if(i < cols && j < rows){
+            var b = disp[j*ppr + i + 1];
+            var c = disp[(j+1)*ppr + i];
+            var d = disp[(j+1)*ppr + i + 1];
+            strokeEdge(a, d);
+            var maxF = Math.max(a.f, b.f, c.f, d.f);
+            if(maxF > 0.04){
+              fillTri(a, b, d, maxF);
+              fillTri(a, d, c, maxF);
+            }
+          }
+        }
+      }
+
+      if(!reduceMotion){
+        meshState.rafId = requestAnimationFrame(draw);
+      }
+    }
+
+    function onMouseMove(e){
+      var rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+      if(reduceMotion) draw(0);
+    }
+    function onMouseLeave(){
+      mouse.active = false;
+      if(reduceMotion) draw(0);
+    }
+    function onTouchMove(e){
+      if(!e.touches || !e.touches.length) return;
+      var rect = canvas.getBoundingClientRect();
+      mouse.x = e.touches[0].clientX - rect.left;
+      mouse.y = e.touches[0].clientY - rect.top;
+      mouse.active = true;
+      if(reduceMotion) draw(0);
+    }
+    function onResize(){ resize(); if(reduceMotion) draw(0); }
+
+    resize();
+    hero.addEventListener("mousemove", onMouseMove);
+    hero.addEventListener("mouseleave", onMouseLeave);
+    hero.addEventListener("touchmove", onTouchMove, { passive: true });
+    hero.addEventListener("touchend", onMouseLeave);
+    window.addEventListener("resize", onResize);
+
+    meshState = { hero: hero, onResize: onResize, onMouseMove: onMouseMove, onMouseLeave: onMouseLeave, onTouchMove: onTouchMove, rafId: null };
+
+    if(reduceMotion){ draw(0); } else { meshState.rafId = requestAnimationFrame(draw); }
   }
 
   function bindHomeEvents(){
