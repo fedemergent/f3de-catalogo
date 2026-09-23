@@ -336,4 +336,22 @@
     });
   });
 
+  // ---------------- Visit counter ----------------
+  document.addEventListener("DOMContentLoaded", function(){
+    var box = document.getElementById("visitCount");
+    if(!box) return;
+    fetch("https://abacus.jasoncameron.dev/hit/f3de-design-catalogo/home-visits")
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data && typeof data.value === "number"){
+          box.textContent = String(data.value).padStart(6, "0");
+        } else {
+          box.closest(".visit-counter").style.display = "none";
+        }
+      })
+      .catch(function(){
+        box.closest(".visit-counter").style.display = "none";
+      });
+  });
+
 })();
