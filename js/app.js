@@ -11,18 +11,33 @@
       active: true, tag: "Catálogo"
     },
     {
-      id: "branding", icon: "🎨", title: "Branding & Identidad",
-      desc: "Marca, logotipo y lineamientos visuales.",
+      id: "productos", icon: "📦", title: "Diseño de Productos y Servicios",
+      desc: "Desarrollo integral de productos, de la idea a la producción.",
       active: false, tag: "Próximamente"
     },
     {
-      id: "grafico", icon: "🖌️", title: "Diseño Gráfico",
-      desc: "Piezas gráficas, menús, señalética y más.",
+      id: "concept", icon: "✏️", title: "Concept Design",
+      desc: "Exploración conceptual y definición visual de nuevas ideas.",
       active: false, tag: "Próximamente"
     },
     {
-      id: "otros", icon: "✨", title: "Otros Proyectos",
-      desc: "Más trabajos e ilustración próximamente.",
+      id: "modelado3d", icon: "🧊", title: "Modelado 3D",
+      desc: "Modelado digital de productos y superficies de clase A.",
+      active: false, tag: "Próximamente"
+    },
+    {
+      id: "animacion3d", icon: "🎬", title: "Animación / Simulación 3D",
+      desc: "Renders animados y simulaciones para presentar tus proyectos.",
+      active: false, tag: "Próximamente"
+    },
+    {
+      id: "prototipado", icon: "🖨️", title: "Prototipado / Impresión 3D",
+      desc: "Prototipos funcionales y modelos impresos en 3D.",
+      active: false, tag: "Próximamente"
+    },
+    {
+      id: "consultoria", icon: "🎓", title: "Consultorías / Capacitación",
+      desc: "Asesoría y formación en diseño y desarrollo de producto.",
       active: false, tag: "Próximamente"
     }
   ];
@@ -105,7 +120,7 @@
       '<div class="hero-content">' +
         '<img src="img/logo.png" class="hero-logo" alt="F3DE DESIGN">' +
         '<h1 class="hero-title">F3DE <b>DESIGN</b></h1>' +
-        '<p class="hero-tagline">Catálogo digital de servicios — diseño, rotulado e identidad visual para proyectos gastronómicos y más.</p>' +
+        '<p class="hero-tagline">Estudio de Diseño Industrial — de la idea al producto: concept design, modelado y prototipado 3D.</p>' +
         '<div class="services-grid">'+cards+'</div>' +
       '</div>' +
     '</section>';

@@ -222,9 +222,17 @@ img{ display:block; max-width: 100%; }
 
 /* ---------- Footer ---------- */
 .site-footer{
+  display:flex; flex-direction:column; align-items:center; gap: 10px;
   text-align:center; padding: 24px; color: var(--text-dim);
   font-size: 0.78rem; border-top: 1px solid var(--border);
 }
+.social-link{
+  display:inline-flex; align-items:center; gap:7px;
+  color: #fff; font-size: 0.82rem;
+  transition: color .2s ease;
+}
+.social-link svg{ color:#fff; }
+.social-link:hover{ color: var(--accent); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 640px){
