@@ -7,7 +7,7 @@
   var SERVICES = [
     {
       id: "food-trucks", icon: "🚚", title: "Food Trucks",
-      desc: "Diseño y rotulado de carros de comida para distintos clientes.",
+      desc: "Diseño y fabricación de food trucks y carros comerciales.",
       active: true, tag: "Catálogo"
     },
     {
@@ -130,7 +130,7 @@
     '<div class="page-head view">' +
       '<a href="#/" class="back-link">&#8592; Inicio</a>' +
       '<h1 class="page-title">Food Trucks</h1>' +
-      '<p class="page-sub">Diseño y rotulado de carros de comida — recorré el carrusel o elegí un cliente.</p>' +
+      '<p class="page-sub">Diseño y fabricación de food trucks y carros comerciales — recorré el carrusel o elegí un cliente.</p>' +
     '</div>' +
     '<section class="section" style="padding-top:0">' +
       '<div class="carousel" id="mainCarousel"></div>' +
