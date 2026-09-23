@@ -177,7 +177,7 @@ window.FOOD_TRUCKS_DATA = {
     {
       "slug": "varios",
       "name": "Varios",
-      "count": 20,
+      "count": 19,
       "cover": "001.jpg",
       "images": [
         "001.jpg",
@@ -198,8 +198,7 @@ window.FOOD_TRUCKS_DATA = {
         "016.jpg",
         "017.jpg",
         "018.jpg",
-        "019.jpg",
-        "020.jpg"
+        "019.jpg"
       ]
     },
     {
